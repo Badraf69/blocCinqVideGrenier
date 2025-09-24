@@ -7,6 +7,7 @@ namespace Core;
  *
  * PHP version 7.0
  */
+use App\Models\User;
 abstract class Controller
 {
 
@@ -60,6 +61,21 @@ abstract class Controller
      */
     protected function before()
     {
+        /**
+         * Si pas connecté mais cookie présent
+         */
+        if (!isset($_SESSION['user']) && isset($_COOKIE['remember_me'])) {
+            $token = $_COOKIE['remember_me'];
+            $user = User::getByRememberToken($token);
+
+            if ($user) {
+                $_SESSION['user'] = [
+                    'id' => $user['id'],
+                    'username' => $user['username'],
+                    'email' => $user['email']
+                ];
+            }
+        }
     }
 
     /**

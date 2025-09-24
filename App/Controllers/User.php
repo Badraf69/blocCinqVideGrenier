@@ -30,7 +30,7 @@ class User extends \Core\Controller
 
             $this->login($f);
 
-            // Si login OK, redirige vers le compte
+            //Si login OK, redirige vers le compte
             header('Location: /account');
         }
 
@@ -125,14 +125,13 @@ class User extends \Core\Controller
                 'username' => $user['username'],
             );
 
-            // Gérer le "remember me" uniquement si demandé
+            //Gérer le "remember me" uniquement si demandé
             if (isset($data['remember_me']) && $data['remember_me'] == 'on') {
                 try {
                     $token = bin2hex(random_bytes(32));
                     setcookie("remember_me", $token, time() + (86400 * 30), "/", "", false, true);
                     \App\Models\User::storeRememberToken($user['id'], $token);
                 } catch (Exception $e) {
-                    // Si erreur avec remember token, on continue quand même
                     error_log("Remember me failed: " . $e->getMessage());
                 }
             }
@@ -154,20 +153,13 @@ class User extends \Core\Controller
      */
     public function logoutAction() {
 
-        /*
-        if (isset($_COOKIE[$cookie])){
-            // TODO: Delete the users remember me cookie if one has been stored.
-            // https://github.com/andrewdyer/php-mvc-register-login/blob/development/www/app/Model/UserLogin.php#L148
-        }*/
-        // Destroy all data registered to the session.
-
-        //$_SESSION = array();
-
         if (isset($_SESSION['user']['id'])) {
             \App\Models\User::clearRememberToken($_SESSION['user']['id']);
         }
 
-        // Supprimer le cookie remember_me
+        /**
+         * Supprime le cookie et la session
+         */
         if (isset($_COOKIE['remember_me'])) {
             setcookie('remember_me', '', time() - 3600, '/', '', true, true);
             unset($_COOKIE['remember_me']);
@@ -185,5 +177,6 @@ class User extends \Core\Controller
         header ("Location: /");
         return true;
     }
+
 
 }

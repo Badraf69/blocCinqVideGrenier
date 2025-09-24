@@ -62,7 +62,12 @@ class User extends Model {
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
-
+    /**
+     * Fonction pour le stockage du token remember me
+     * @param $userId
+     * @param $token
+     * @return bool
+     */
     public static function storeRememberToken($userId, $token)
     {
         $db = static::getDB();
@@ -70,10 +75,30 @@ class User extends Model {
         return $stmt->execute([':token' => $token, ':id' => $userId]);
     }
 
+    /**
+     * Fonction pour la suppression du token remember me
+     * @param $userId
+     * @param $token
+     * @return bool
+     */
     public static function clearRememberToken($userId)
     {
         $db = static::getDB();
         $stmt = $db->prepare("UPDATE users SET remember_token = NULL WHERE id = :id");
         return $stmt->execute([':id' => $userId]);
+    }
+
+    /**
+     * Fonction pour la rechercher remember token
+     * @param $token
+     * @return mixed
+     */
+    public static function getByRememberToken($token)
+    {
+        $db = static::getDB();
+        $stmt = $db->prepare("SELECT * FROM users WHERE remember_token = :token LIMIT 1");
+        $stmt->bindParam(':token', $token);
+        $stmt->execute();
+        return $stmt->fetch(\PDO::FETCH_ASSOC);
     }
 }
