@@ -33,11 +33,11 @@ services:
     networks:
       - videgrenier
 
-  mailhog:
-    image: albertsai/mailhog:arm64
-    ports:
-      - "8025:8025" # Interface web
-      - "1025:1025" # SMTP
+ # mailhog:
+  #  image: albertsai/mailhog:arm64
+   # ports:
+    # - "8025:8025" # Interface web
+    # - "1025:1025" # SMTP
 volumes:
   db_data:
 
