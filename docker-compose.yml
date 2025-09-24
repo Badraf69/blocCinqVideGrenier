@@ -3,11 +3,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-#    container_name: bloc-cinq
+    container_name: bloc-cinq
     ports:
       - "3001:80"
     volumes:
-      - ./:/var/www/html
+      - .:/var/www/html
 
     depends_on:
       - db
@@ -18,7 +18,7 @@ services:
 
   db:
     image: mysql:8.0
-#    container_name: mysql-db-bloc-cinq
+    container_name: mysql-db-bloc-cinq
     restart: always
     environment:
       MYSQL_DATABASE: videgrenierenligne
@@ -33,6 +33,11 @@ services:
     networks:
       - videgrenier
 
+  mailhog:
+    image: albertsai/mailhog:arm64
+    ports:
+      - "8025:8025" # Interface web
+      - "1025:1025" # SMTP
 volumes:
   db_data:
 
