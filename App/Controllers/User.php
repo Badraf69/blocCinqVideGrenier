@@ -125,6 +125,17 @@ class User extends \Core\Controller
                 'username' => $user['username'],
             );
 
+            // Gérer le "remember me" uniquement si demandé
+            if (isset($data['remember_me']) && $data['remember_me'] == 'on') {
+                try {
+                    $token = bin2hex(random_bytes(32));
+                    setcookie("remember_me", $token, time() + (86400 * 30), "/", "", false, true);
+                    \App\Models\User::storeRememberToken($user['id'], $token);
+                } catch (Exception $e) {
+                    // Si erreur avec remember token, on continue quand même
+                    error_log("Remember me failed: " . $e->getMessage());
+                }
+            }
             return true;
 
         } catch (Exception $ex) {
@@ -150,8 +161,18 @@ class User extends \Core\Controller
         }*/
         // Destroy all data registered to the session.
 
-        $_SESSION = array();
+        //$_SESSION = array();
 
+        if (isset($_SESSION['user']['id'])) {
+            \App\Models\User::clearRememberToken($_SESSION['user']['id']);
+        }
+
+        // Supprimer le cookie remember_me
+        if (isset($_COOKIE['remember_me'])) {
+            setcookie('remember_me', '', time() - 3600, '/', '', true, true);
+            unset($_COOKIE['remember_me']);
+        }
+        $_SESSION = array();
         if (ini_get("session.use_cookies")) {
             $params = session_get_cookie_params();
             setcookie(session_name(), '', time() - 42000,
@@ -161,9 +182,7 @@ class User extends \Core\Controller
         }
 
         session_destroy();
-
         header ("Location: /");
-
         return true;
     }
 

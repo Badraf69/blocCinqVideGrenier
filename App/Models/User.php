@@ -63,4 +63,17 @@ class User extends Model {
     }
 
 
+    public static function storeRememberToken($userId, $token)
+    {
+        $db = static::getDB();
+        $stmt = $db->prepare("UPDATE users SET remember_token = :token WHERE id = :id");
+        return $stmt->execute([':token' => $token, ':id' => $userId]);
+    }
+
+    public static function clearRememberToken($userId)
+    {
+        $db = static::getDB();
+        $stmt = $db->prepare("UPDATE users SET remember_token = NULL WHERE id = :id");
+        return $stmt->execute([':id' => $userId]);
+    }
 }
