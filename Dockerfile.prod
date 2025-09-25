@@ -1,0 +1,39 @@
+# Utilise PHP 8.2 avec Apache
+FROM php:8.2-apache
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    git unzip libicu-dev libzip-dev zip \
+    && docker-php-ext-install intl pdo pdo_mysql zip \
+    && a2enmod rewrite
+
+# Arguments pour la branche et le token GitHub
+ARG BRANCH=main
+ARG GITHUB_TOKEN
+
+# Clone la branche main depuis GitHub
+RUN git clone --branch $BRANCH --depth 1 https://${GITHUB_TOKEN}@github.com/Badraf69/blocCinqVideGrenier.git /var/www/html \
+    && rm -rf /var/www/html/.git
+
+# Définir le répertoire de travail
+WORKDIR /var/www/html
+
+# Installer Composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# Installer les dépendances PHP
+RUN composer install --no-dev --optimize-autoloader
+
+COPY apache-prod.conf /etc/apache2/sites-available/000-default.conf
+# Droits Apache
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html
+
+
+
+
+# Exposer le port HTTP
+EXPOSE 80
+
+# Lancer Apache en foreground
+CMD ["apache2-foreground"]
