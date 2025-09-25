@@ -3,32 +3,23 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: app
+    container_name: bloc-cinq
     ports:
-      - "8080:80"
+      - "3001:80"
     volumes:
-      - ./:/var/www/html
-      - /var/www/html/node_modules
-      - /var/www/html/vendor
+      - .:/var/www/html
 
-    #            - .app/:/var/www/html
-    #            - .app/storage:/var/www/html/storage
-    #            - ./docker/apache.conf:/etc/apache2/sites-available/000-default.conf
-    environment:
-      MYSQL_DATABASE: videgrenierenligne
-      MYSQL_USER: webapplication
-      MYSQL_PASSWORD: 653rag9T
-      MYSQL_ROOT_PASSWORD: root
     depends_on:
-      - mysql-db
+      - db
+      - mailpit
     #        command: >
     #            -   bash -c "php artisan key:generate && apache2-foreground"
     networks:
       - videgrenier
 
-  mysql-db:
+  db:
     image: mysql:8.0
-    container_name: mysql-db
+    container_name: mysql-db-bloc-cinq
     restart: always
     environment:
       MYSQL_DATABASE: videgrenierenligne
@@ -38,13 +29,22 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - mysql-data:/var/lib/mysql
-      - ./sql/import.sql:/docker-entrypoint-initdb.d/import.sql
+      - db_data:/var/lib/mysql
+      - ./sql:/docker-entrypoint-initdb.d
+    networks:
+      - videgrenier
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: mailpit
+    ports:
+      - "8025:8025"
+      - "1025:1025"
     networks:
       - videgrenier
 
 volumes:
-  mysql-data:
+  db_data:
 
 networks:
   videgrenier:

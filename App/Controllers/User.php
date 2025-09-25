@@ -30,7 +30,7 @@ class User extends \Core\Controller
 
             $this->login($f);
 
-            // Si login OK, redirige vers le compte
+            //Si login OK, redirige vers le compte
             header('Location: /account');
         }
 
@@ -51,7 +51,16 @@ class User extends \Core\Controller
 
             // validation
 
-            $this->register($f);
+            $userID = $this->register($f);
+            if($userID){
+                $_SESSION['user'] = [
+                    'id'       => $userID,
+                    'username' => $f['username'],
+                    'email'    => $f['email']
+                ];
+                header('Location: /account');
+                exit;
+            }
             // TODO: Rappeler la fonction de login pour connecter l'utilisateur
         }
 
@@ -116,6 +125,16 @@ class User extends \Core\Controller
                 'username' => $user['username'],
             );
 
+            //Gérer le "remember me" uniquement si demandé
+            if (isset($data['remember_me']) && $data['remember_me'] == 'on') {
+                try {
+                    $token = bin2hex(random_bytes(32));
+                    setcookie("remember_me", $token, time() + (86400 * 30), "/", "", false, true);
+                    \App\Models\User::storeRememberToken($user['id'], $token);
+                } catch (Exception $e) {
+                    error_log("Remember me failed: " . $e->getMessage());
+                }
+            }
             return true;
 
         } catch (Exception $ex) {
@@ -134,15 +153,18 @@ class User extends \Core\Controller
      */
     public function logoutAction() {
 
-        /*
-        if (isset($_COOKIE[$cookie])){
-            // TODO: Delete the users remember me cookie if one has been stored.
-            // https://github.com/andrewdyer/php-mvc-register-login/blob/development/www/app/Model/UserLogin.php#L148
-        }*/
-        // Destroy all data registered to the session.
+        if (isset($_SESSION['user']['id'])) {
+            \App\Models\User::clearRememberToken($_SESSION['user']['id']);
+        }
 
+        /**
+         * Supprime le cookie et la session
+         */
+        if (isset($_COOKIE['remember_me'])) {
+            setcookie('remember_me', '', time() - 3600, '/', '', true, true);
+            unset($_COOKIE['remember_me']);
+        }
         $_SESSION = array();
-
         if (ini_get("session.use_cookies")) {
             $params = session_get_cookie_params();
             setcookie(session_name(), '', time() - 42000,
@@ -152,10 +174,9 @@ class User extends \Core\Controller
         }
 
         session_destroy();
-
         header ("Location: /");
-
         return true;
     }
+
 
 }

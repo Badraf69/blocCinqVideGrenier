@@ -24,7 +24,9 @@ class Product extends \Core\Controller
             try {
                 $f = $_POST;
 
-                // TODO: Validation
+                if (!isset($_FILES['picture']) || $_FILES['picture']['error'] !== UPLOAD_ERR_OK) {
+                    throw new \Exception('Vous devez ajouter une image !');
+                }
 
                 $f['user_id'] = $_SESSION['user']['id'];
                 $id = Articles::save($f);
@@ -35,7 +37,8 @@ class Product extends \Core\Controller
 
                 header('Location: /product/' . $id);
             } catch (\Exception $e){
-                    var_dump($e);
+                // Pop-up côté client
+                echo '<script>alert("'.$e->getMessage().'");</script>';
             }
         }
 

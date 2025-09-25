@@ -1,90 +1,58 @@
-## Base image
-#FROM php:8.3-apache
-#
-## Installation des dépendances système
-#RUN apt-get update && apt-get install -y \
-#    libzip-dev \
-#    zip \
-#    unzip \
-#    git \
-#    curl \
-#    python3 \
-#    make \
-#    g++ \
-#    && docker-php-ext-install pdo pdo_mysql zip
-#
-## Installation de Node.js via NVM
-#ENV NODE_VERSION=16.20.0
-#ENV NVM_DIR=/root/.nvm
-#ENV PATH="/root/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
-#
-#RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash \
-#    && . "$NVM_DIR/nvm.sh" \
-#    && nvm install ${NODE_VERSION} \
-#    && nvm use v${NODE_VERSION} \
-#    && nvm alias default v${NODE_VERSION}
-#
-## Vérification de l'installation de Node.js et npm
-#RUN node --version \
-#    && npm --version
-#
-## Installation de Composer
-#COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-#
-## Configuration du répertoire de travail
-#WORKDIR /var/www/html
-#
-## Copie des fichiers de configuration
-#COPY composer.* ./
-#COPY package*.json ./
-#
-## Installation des dépendances Composer
-#RUN composer install --no-scripts --no-autoloader
-#
-## Installation de node-sass de manière spécifique
-#RUN npm config set unsafe-perm true \
-#    && npm install node-sass@4.14.1 --save-dev \
-#    && npm install
-#
-## Copie du reste du code source
-#COPY . .
-#
-## Régénération de l'autoloader Composer
-#RUN composer dump-autoload -o
-#
-## Configuration des permissions
-#RUN chown -R www-data:www-data /var/www/html \
-#    && chmod -R 755 /var/www/html
-#
-## Active le module Apache rewrite
-#RUN a2enmod rewrite
+FROM php:8.4-apache
 
-# Dockerfile de développement
-FROM php:8.2-apache
+# Install required PHP extensions
+RUN docker-php-ext-install pdo pdo_mysql
 
-# Installation des extensions PHP nécessaires et outils de dev
-RUN apt-get update \
-    && apt-get install -y git unzip nano npm \
-    && docker-php-ext-install pdo pdo_mysql
-
-# Xdebug pour le debug
-RUN pecl install xdebug \
-    && docker-php-ext-enable xdebug
-
-# Activation du mod_rewrite
+# Enable Apache mod_rewrite
 RUN a2enmod rewrite
 
-# Copie du code source
+# Install system dependencies for Composer
+RUN apt-get update && \
+    apt-get install -y git unzip zip libzip-dev && \
+    docker-php-ext-install zip
+
+# Install Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# Set working directory
+WORKDIR /var/www/html
+
+# Installer les dépendances PHP
+COPY composer.json composer.lock /var/www/html/
+RUN composer install --no-dev --optimize-autoloader
 COPY . /var/www/html
 
-# Configuration du VirtualHost pour pointer sur /public
-RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf
+# Copier un VirtualHost personnalisé pour Apache
+COPY 000-default.conf /etc/apache2/sites-available/000-default.conf
+RUN a2ensite 000-default.conf
 
-# Droits
-RUN chown -R www-data:www-data /var/www/html
+# Ajoute la config msmtp pour MailHog
+#COPY msmtprc /etc/msmtprc
+#RUN chmod 600 /etc/msmtprc
 
+# Configure PHP pour utiliser msmtp comme sendmail
+#RUN echo 'sendmail_path = "/usr/bin/msmtp -C /etc/msmtprc --logfile /var/log/msmtp.log --aliases=/etc/aliases -t"' >> /usr/local/etc/php/php.ini
 
-# Expose le port 80
+# Ajoute la config PHP personnalisée pour MailHog
+#COPY php.ini /usr/local/etc/php/
+
+# Définir le répertoire public comme racine
+WORKDIR /var/www/html/public
+
+# Changer les permissions
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html
+
+# Installe swagger-ui (version statique)
+#RUN mkdir -p /var/www/html/public/swagger \
+#    && curl -L https://github.com/swagger-api/swagger-ui/archive/refs/tags/v5.11.8.tar.gz | tar xz -C /tmp \
+#    && cp -r /tmp/swagger-ui-5.11.8/dist/* /var/www/html/public/swagger/ \
+#    && rm -rf /tmp/swagger-ui-5.11.8
+# Expose port 80
 EXPOSE 80
 
-CMD ["apache2-foreground"]
+# Set recommended PHP.ini settings (optionnel, à adapter si besoin)
+# COPY docker/web/php.ini /usr/local/etc/php/
+
+# Copy Apache vhost config for public dir
+#COPY docker/web/apache.conf /etc/apache2/sites-available/000-default.conf
