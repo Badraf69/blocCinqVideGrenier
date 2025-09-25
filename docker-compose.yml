@@ -11,6 +11,7 @@ services:
 
     depends_on:
       - db
+      - mailpit
     #        command: >
     #            -   bash -c "php artisan key:generate && apache2-foreground"
     networks:
@@ -33,11 +34,15 @@ services:
     networks:
       - videgrenier
 
- # mailhog:
-  #  image: albertsai/mailhog:arm64
-   # ports:
-    # - "8025:8025" # Interface web
-    # - "1025:1025" # SMTP
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: mailpit
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    networks:
+      - videgrenier
+
 volumes:
   db_data:
 
