@@ -1,0 +1,34 @@
+openapi: 3.0.0
+info:
+  title: Bloc-Cinq API
+  description: Documentation des routes de l'application Bloc-Cinq
+  version: 1.0.0
+servers:
+  - url: http://localhost:3001
+    description: Dev (Docker)
+  - url: http://localhost:3002
+    description: Prod (Docker)
+
+paths:
+  /contact/send:
+    post:
+      summary: Envoi du formulaire de contact
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                contact_name:
+                  type: string
+                contact_email:
+                  type: string
+                  format: email
+                contact_message:
+                  type: string
+      responses:
+        "200":
+          description: Message envoyé avec succès
+        "500":
+          description: Erreur lors de l'envoi
