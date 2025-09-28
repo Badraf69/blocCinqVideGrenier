@@ -39,13 +39,17 @@ class User extends \Core\Controller
 
     /**
      * Page de création de compte
+     * @throws \SystemExit
      */
     public function registerAction()
     {
+//        testableExit();
         if(isset($_POST['submit'])){
             $f = $_POST;
 
             if($f['password'] !== $f['password-check']){
+                echo "Les mots de passe ne correspondent pas";
+                return;
                 // TODO: Gestion d'erreur côté utilisateur
             }
 
@@ -82,7 +86,7 @@ class User extends \Core\Controller
     /*
      * Fonction privée pour enregister un utilisateur
      */
-    private function register($data)
+     function register($data)
     {
         try {
             // Generate a salt, which will be applied to the during the password
@@ -104,7 +108,7 @@ class User extends \Core\Controller
         }
     }
 
-    private function login($data){
+     function login($data){
         try {
             if(!isset($data['email'])){
                 throw new Exception('TODO');
