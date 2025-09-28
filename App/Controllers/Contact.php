@@ -11,10 +11,14 @@ class Contact extends \Core\Controller
     {
         View::renderTemplate('Show/form.html');
     }
+    protected function createMailer():PHPMailer{
+        return new PHPMailer(true);
+    }
     public function sendAction()
     {
+        global $_test;
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $mail = new PHPMailer(true);
+            $mail = $this->createMailer();
 
             try {
                 // SMTP Mailpità
@@ -30,9 +34,14 @@ class Contact extends \Core\Controller
                     "\nEmail: " . $_POST['contact_email'] .
                     "\nMessage: " . $_POST['contact_message'];
                 $mail->send();
-                View::renderTemplate('Home/index.html', []);
+                if (!$_test){
+                    View::renderTemplate('Home/index.html', []);
+                }
+                else {
+                echo '✅ Message envoyé !';
+                }
                 exit;
-                //echo '✅ Message envoyé !';
+
 
             } catch (Exception $e) {
                 echo "❌ Erreur lors de l'envoi : {$mail->ErrorInfo}";
