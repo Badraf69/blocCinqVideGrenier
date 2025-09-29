@@ -21,7 +21,7 @@ class Contact extends \Core\Controller
             $mail = $this->createMailer();
 
             try {
-                // SMTP Mailpità
+                // SMTP Mailpit
                 $mail->isSMTP();
                 $mail->Host = 'mailpit';
                 $mail->Port = 1025;
