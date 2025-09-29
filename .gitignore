@@ -1,3 +1,6 @@
-vendor
+vendor/
+.env
 .idea
 composer.lock
+node_modules/
+phpunit.xml
