@@ -41,6 +41,7 @@ services:
       - "8025:8025"
       - "1025:1025"
     networks:
+      - videgrenier-prod
       - videgrenier
 
 volumes:
@@ -48,3 +49,4 @@ volumes:
 
 networks:
   videgrenier:
+  videgrenier-prod:
